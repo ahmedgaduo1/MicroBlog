@@ -58,6 +58,7 @@ public class PostService : IPostService
                 UserProfileImageUrl = p.User?.ProfileImageUrl,
                 PostedAt = p.CreatedAt,
                 LikeCount = p.LikeCount,
+                CommentCount = p.CommentCount,
                 IsLiked = p.LikedByUsers.Any(u => u.Id == userId)
             });
         }
@@ -150,19 +151,35 @@ public class PostService : IPostService
         _logger.LogInformation("User {UserId} is liking post {PostId}", userId, postId);
         try
         {
+            // Find the post with the liked users included
             var post = await _context.Posts
                 .Include(p => p.LikedByUsers)
                 .FirstOrDefaultAsync(p => p.Id == postId);
+                
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == userId);
 
-            if (post != null && !post.LikedByUsers.Any(u => u.Id == userId))
+            if (post == null || user == null)
             {
-                post.LikedByUsers.Add(new ApplicationUser { Id = userId });
+                _logger.LogWarning("Post {PostId} or User {UserId} not found", postId, userId);
+                return;
+            }
+
+            // Check if already liked
+            if (!post.LikedByUsers.Any(u => u.Id == userId))
+            {
+                // Add the relationship
+                post.LikedByUsers.Add(user);
+                
+                // Increment like count
+                post.LikeCount++;
+                
                 await _context.SaveChangesAsync();
                 _logger.LogDebug("User {UserId} successfully liked post {PostId}", userId, postId);
             }
             else
             {
-                _logger.LogDebug("Post {PostId} not found or already liked by user {UserId}", postId, userId);
+                _logger.LogDebug("Post {PostId} already liked by user {UserId}", postId, userId);
             }
         }
         catch (Exception ex)
@@ -180,27 +197,37 @@ public class PostService : IPostService
         _logger.LogInformation("User {UserId} is unliking post {PostId}", userId, postId);
         try
         {
+            // Find the post with liked users included
             var post = await _context.Posts
                 .Include(p => p.LikedByUsers)
                 .FirstOrDefaultAsync(p => p.Id == postId);
-
-            if (post != null)
+                
+            if (post == null)
             {
-                var user = post.LikedByUsers.FirstOrDefault(u => u.Id == userId);
-                if (user != null)
+                _logger.LogWarning("Post {PostId} not found", postId);
+                return;
+            }
+            
+            // Find the user who liked the post
+            var likedUser = post.LikedByUsers.FirstOrDefault(u => u.Id == userId);
+                
+            if (likedUser != null)
+            {
+                // Remove the relationship
+                post.LikedByUsers.Remove(likedUser);
+                
+                // Decrement the like count on the post
+                if (post.LikeCount > 0)
                 {
-                    post.LikedByUsers.Remove(user);
-                    await _context.SaveChangesAsync();
-                    _logger.LogDebug("User {UserId} successfully unliked post {PostId}", userId, postId);
+                    post.LikeCount--;
                 }
-                else
-                {
-                    _logger.LogDebug("Post {PostId} was not liked by user {UserId}", postId, userId);
-                }
+                
+                await _context.SaveChangesAsync();
+                _logger.LogDebug("User {UserId} successfully unliked post {PostId}", userId, postId);
             }
             else
             {
-                _logger.LogDebug("Post {PostId} not found when user {UserId} tried to unlike it", postId, userId);
+                _logger.LogDebug("Post {PostId} was not liked by user {UserId}", postId, userId);
             }
         }
         catch (Exception ex)

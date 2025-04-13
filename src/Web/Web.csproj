@@ -39,6 +39,7 @@
 
   <ItemGroup>
     <Folder Include="Endpoints\" />
+    <Folder Include="wwwroot\uploads\images\" />
   </ItemGroup>
 
 </Project>
