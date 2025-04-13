@@ -36,8 +36,8 @@ public class PostServiceTests
         _mockContext.Setup(c => c.Posts).Returns(mockPostsDbSet.Object);
 
         _postService = new PostService(
-            _mockContext.Object, 
-            _mockImageService.Object, 
+            _mockContext.Object,
+            _mockImageService.Object,
             _mockLogger.Object,
             _mockHttpContextAccessor.Object
         );
@@ -49,20 +49,20 @@ public class PostServiceTests
         // Arrange
         var userId = "test-user-id";
         var postText = "Test post content";
-        
+
         // Track the entity being added
         Post capturedPost = null;
-        
+
         // Setup a simple mock of Posts
         _mockContext.Setup(c => c.Posts.Add(It.IsAny<Post>()))
             .Callback<Post>(post => capturedPost = post);
-            
+
         _mockContext.Setup(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
         // Act
         // Use the service method
-        _ = await _postService.CreatePostAsync(userId, postText, null);
+        await _postService.CreatePostAsync(userId, postText, null);
 
         // Assert
         // We're only asserting on the captured post since we're not capturing the result
@@ -78,10 +78,10 @@ public class PostServiceTests
         var longText = new string('x', 141);
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => 
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
             _postService.CreatePostAsync("user-id", longText, null)
         );
-        
+
         exception.Message.Should().Contain("140"); // Verify error message contains character limit
     }
 
