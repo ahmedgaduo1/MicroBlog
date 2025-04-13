@@ -1,0 +1,35 @@
+@using MicroBlog.Web.Models
+@model CreatePostViewModel
+
+@{
+    ViewData["Title"] = "Create Post - MicroBlog";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title">Create New Post</h4>
+                    <form asp-action="CreatePost" method="post" enctype="multipart/form-data">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <div class="form-group mb-3">
+                            <label asp-for="Text" class="control-label"></label>
+                            <textarea asp-for="Text" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="Text" class="text-danger"></span>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label asp-for="Image" class="control-label"></label>
+                            <input asp-for="Image" class="form-control" accept="image/*" />
+                            <span asp-validation-for="Image" class="text-danger"></span>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">Create Post</button>
+                            <a asp-action="Index" class="btn btn-secondary">Back to Timeline</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

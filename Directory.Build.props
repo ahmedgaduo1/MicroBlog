@@ -1,0 +1,72 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <Using Include="Xunit" />
+    <Using Include="Moq" />
+    <Using Include="FluentAssertions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Package Versions -->
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.0-preview.2.24128.4" />
+    <PackageVersion Include="Moq" Version="4.20.69" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.0" />
+    <PackageVersion Include="coverlet.msbuild" Version="6.0.0" />
+    <PackageVersion Include="FluentAssertions" Version="6.12.0" />
+    <PackageVersion Include="xunit" Version="2.6.6" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.6" />
+
+    <!-- ASP.NET Core Packages -->
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0-preview.2.24128.4" />
+    <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.0-preview.2.24128.4" />
+    <PackageVersion Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.0-preview.2.24128.4" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.0-preview.2.24128.4" />
+    <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="9.0.0-preview.2.24128.4" />
+
+    <!-- Entity Framework Core Packages -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="9.0.0-preview.2.24128.4" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0-preview.2.24128.4" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.0-preview.2.24128.4" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0-preview.2.24128.4" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.0-preview.2.24128.4" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.0-preview.2.24128.4" />
+
+    <!-- Validation and Mapping Packages -->
+    <PackageVersion Include="FluentValidation" Version="11.5.1" />
+    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.5.1" />
+    <PackageVersion Include="FluentValidation.AspNetCore" Version="11.3.0" />
+    <PackageVersion Include="AutoMapper" Version="12.0.1" />
+    <PackageVersion Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+
+    <!-- Logging and Dependency Injection -->
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.0-preview.2.24128.4" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.0-preview.2.24128.4" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0-preview.2.24128.4" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="9.0.0-preview.2.24128.4" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.0-preview.2.24128.4" />
+    <PackageVersion Include="Microsoft.Extensions.Identity.Core" Version="9.0.0-preview.2.24128.4" />
+    <PackageVersion Include="Microsoft.Extensions.Identity.Stores" Version="9.0.0-preview.2.24128.4" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="9.0.0-preview.2.24128.4" />
+
+    <!-- Image Processing -->
+    <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.0" />
+    <PackageVersion Include="Magick.NET-Q16-AnyCPU" Version="13.3.0" />
+
+    <!-- Other Packages -->
+    <PackageVersion Include="MediatR" Version="12.2.0" />
+    <PackageVersion Include="Ardalis.GuardClauses" Version="2.2.0" />
+    <PackageVersion Include="Azure.Identity" Version="1.10.4" />
+    <PackageVersion Include="Azure.Storage.Blobs" Version="12.19.1" />
+    <PackageVersion Include="Hangfire.Core" Version="1.8.6" />
+    <PackageVersion Include="Hangfire.SqlServer" Version="1.8.6" />
+    <PackageVersion Include="Hangfire.AspNetCore" Version="1.8.6" />
+    <PackageVersion Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0-preview.2.24128.4" />
+  </ItemGroup>
+</Project>

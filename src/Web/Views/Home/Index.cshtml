@@ -1,0 +1,194 @@
+@using MicroBlog.Web.Models
+@model IEnumerable<PostViewModel>
+
+@{
+    ViewData["Title"] = "Home - MicroBlog";
+}
+
+<div class="container">
+    <div class="row mt-4">
+        <!-- Left Sidebar -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Trending Topics</h5>
+                    <!-- Add trending topics here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">What's on your mind?</h5>
+                    <form asp-action="CreatePost" method="post" enctype="multipart/form-data" id="createPostForm">
+                        <div class="form-group mb-3">
+                            <textarea class="form-control" rows="3" placeholder="What's happening? (Max 140 characters)" name="Text" id="postText" maxlength="140" required></textarea>
+                            <div class="invalid-feedback" id="textError">
+                                Post text is required and must be at most 140 characters.
+                            </div>
+                            <div class="text-muted mt-1">
+                                <small><span id="charCount">0</span>/140 characters</small>
+                            </div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="postImage" class="form-label">Add Image (optional)</label>
+                            <input type="file" class="form-control" name="Image" id="postImage" accept="image/*">
+                            <div class="form-text">Supported formats: JPG, PNG, GIF (max 5MB)</div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send me-1"></i> Post
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            @foreach (var post in Model)
+            {
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                            <img src="@post.UserProfileImageUrl" class="rounded-circle me-2" style="width: 40px; height: 40px;">
+                            <div>
+                                <strong>@post.UserName</strong>
+                                <span class="text-muted">· @post.PostedAt</span>
+                            </div>
+                        </div>
+                        <p class="mb-2">@post.Text</p>
+                        @if (!string.IsNullOrEmpty(post.ImageUrl))
+                        {
+                            <img src="@post.ImageUrl" class="img-fluid rounded" alt="Post image">
+                        }
+                        <div class="d-flex justify-content-between mt-2">
+                            <div class="d-flex align-items-center">
+                                <button class="btn btn-link text-secondary p-0 comment-btn" data-post-id="@post.Id">
+                                    <i class="bi bi-chat-dots"></i> Comment (@post.CommentCount)
+                                </button>
+                                @if (post.IsLiked)
+                                {
+                                    <button class="btn btn-link text-danger p-0 ms-3 unlike-btn" data-post-id="@post.Id">
+                                        <i class="bi bi-heart-fill"></i> Unlike
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-link text-secondary p-0 ms-3 like-btn" data-post-id="@post.Id">
+                                        <i class="bi bi-heart"></i> Like
+                                    </button>
+                                }
+                            </div>
+                            <span class="text-muted likes-count" data-post-id="@post.Id">@post.LikeCount likes</span>
+                        </div>
+                        <!-- Comment section, initially hidden -->
+                        <div class="comment-section mt-3" id="comments-@post.Id" style="display:none;">
+                            <hr />
+                            <h6 class="mb-3">Comments</h6>
+                            <!-- Comment Form -->
+                            <div class="mb-3">
+                                <form class="comment-form" data-post-id="@post.Id">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" placeholder="Add a comment..." aria-label="Add a comment" maxlength="280" required>
+                                        <button class="btn btn-primary" type="submit">Post</button>
+                                    </div>
+                                </form>
+                            </div>
+                            <!-- Comments List -->
+                            <div class="comments-list" data-post-id="@post.Id">
+                                <div class="text-center" id="comments-loading-@post.Id">
+                                    <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Who to follow</h5>
+                    <!-- Add suggested users here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Character counter for post text
+        document.addEventListener('DOMContentLoaded', function () {
+            const textArea = document.getElementById('postText');
+            const charCount = document.getElementById('charCount');
+            const textError = document.getElementById('textError');
+            const form = document.getElementById('createPostForm');
+            const fileInput = document.getElementById('postImage');
+            
+            if (textArea && charCount) {
+                textArea.addEventListener('input', function() {
+                    const count = this.value.length;
+                    charCount.textContent = count;
+                    
+                    if (count > 140) {
+                        textArea.classList.add('is-invalid');
+                        textError.textContent = 'Text must be at most 140 characters';
+                    } else if (count === 0) {
+                        textArea.classList.add('is-invalid');
+                        textError.textContent = 'Post text is required';
+                    } else {
+                        textArea.classList.remove('is-invalid');
+                    }
+                });
+            }
+            
+            if (fileInput) {
+                fileInput.addEventListener('change', function() {
+                    const file = this.files[0];
+                    if (file) {
+                        // Check file type
+                        const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                        if (!validTypes.includes(file.type)) {
+                            this.value = '';
+                            alert('Please select a valid image file (JPG, PNG, or GIF)');
+                            return;
+                        }
+                        
+                        // Check file size (5MB limit)
+                        if (file.size > 5 * 1024 * 1024) {
+                            this.value = '';
+                            alert('Image file size must be less than 5MB');
+                            return;
+                        }
+                    }
+                });
+            }
+            
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    if (!textArea.value.trim()) {
+                        e.preventDefault();
+                        textArea.classList.add('is-invalid');
+                        textError.textContent = 'Post text is required';
+                        return false;
+                    }
+                    
+                    if (textArea.value.length > 140) {
+                        e.preventDefault();
+                        textArea.classList.add('is-invalid');
+                        textError.textContent = 'Text must be at most 140 characters';
+                        return false;
+                    }
+                    
+                    return true;
+                });
+            }
+        });
+    </script>
+}
