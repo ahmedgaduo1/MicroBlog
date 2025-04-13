@@ -97,7 +97,7 @@ Ensure you have the following installed on your development machine:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/MicroBlog.git
+git clone https://github.com/ahmedgaduo1/MicroBlog.git
 cd MicroBlog
 ```
 
