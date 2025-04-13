@@ -33,139 +33,55 @@ variables:
   testProjects: '**/MicroBlog.Tests.csproj'
   NUGET_PACKAGES: $(Pipeline.Workspace)/.nuget/packages
 
-stages:
-- stage: Build
-  displayName: 'Build and Test'
-  jobs:
-  - job: BuildAndTest
-    displayName: 'Build and Test'
-    
-    steps:
-    - task: UseDotNet@2
-      displayName: 'Use .NET SDK $(dotnetSdkVersion)'
-      inputs:
-        packageType: 'sdk'
-        version: '$(dotnetSdkVersion)'
-        includePreviewVersions: true
+jobs:
+- job: BuildAndTest
+  displayName: 'Build and Run Tests'
+  
+  steps:
+  - task: UseDotNet@2
+    displayName: 'Use .NET SDK $(dotnetSdkVersion)'
+    inputs:
+      packageType: 'sdk'
+      version: '$(dotnetSdkVersion)'
+      includePreviewVersions: true
 
-    - task: Cache@2
-      displayName: 'Cache NuGet packages'
-      inputs:
-        key: 'nuget | "$(Agent.OS)" | **/packages.lock.json,**/packages.config,**/Directory.Packages.props'
-        restoreKeys: |
-          nuget | "$(Agent.OS)"
-        path: '$(NUGET_PACKAGES)'
-        cacheHitVar: 'CACHE_RESTORED'
+  - task: Cache@2
+    displayName: 'Cache NuGet packages'
+    inputs:
+      key: 'nuget | "$(Agent.OS)" | **/packages.lock.json,**/packages.config,**/Directory.Packages.props'
+      restoreKeys: |
+        nuget | "$(Agent.OS)"
+      path: '$(NUGET_PACKAGES)'
+      cacheHitVar: 'CACHE_RESTORED'
 
-    - task: DotNetCoreCLI@2
-      displayName: 'Restore NuGet packages'
-      inputs:
-        command: 'restore'
-        projects: '$(solutionPath)'
-        feedsToUse: 'select'
-        verbosityRestore: 'Normal'
+  - task: DotNetCoreCLI@2
+    displayName: 'Restore NuGet packages'
+    inputs:
+      command: 'restore'
+      projects: '$(solutionPath)'
+      feedsToUse: 'select'
+      verbosityRestore: 'Normal'
 
-    - task: DotNetCoreCLI@2
-      displayName: 'Build solution'
-      inputs:
-        command: 'build'
-        projects: '$(solutionPath)'
-        arguments: '--configuration $(buildConfiguration) --no-restore'
-    
-    - task: DotNetCoreCLI@2
-      displayName: 'Run unit tests'
-      inputs:
-        command: 'test'
-        projects: '$(testProjects)'
-        arguments: '--configuration $(buildConfiguration) --no-build --collect:"XPlat Code Coverage" --settings "$(Build.SourcesDirectory)/tests/coverlet.runsettings"'
-        publishTestResults: true
-        testRunTitle: 'Unit Tests'
+  - task: DotNetCoreCLI@2
+    displayName: 'Build solution'
+    inputs:
+      command: 'build'
+      projects: '$(solutionPath)'
+      arguments: '--configuration $(buildConfiguration) --no-restore'
+  
+  - task: DotNetCoreCLI@2
+    displayName: 'Run unit tests'
+    inputs:
+      command: 'test'
+      projects: '$(testProjects)'
+      arguments: '--configuration $(buildConfiguration) --no-build --collect:"XPlat Code Coverage" --settings "$(Build.SourcesDirectory)/tests/coverlet.runsettings"'
+      publishTestResults: true
+      testRunTitle: 'Unit Tests'
 
-    - task: PublishCodeCoverageResults@1
-      displayName: 'Publish code coverage report'
-      inputs:
-        codeCoverageTool: 'Cobertura'
-        summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
-        reportDirectory: '$(Agent.TempDirectory)/**/TestResults'
-        failIfCoverageEmpty: false
-
-    - task: DotNetCoreCLI@2
-      displayName: 'Publish web application'
-      inputs:
-        command: 'publish'
-        publishWebProjects: true
-        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/webapp --no-build'
-        zipAfterPublish: true
-
-    - task: PublishBuildArtifacts@1
-      displayName: 'Publish build artifacts'
-      inputs:
-        pathToPublish: '$(Build.ArtifactStagingDirectory)/webapp'
-        artifactName: 'webapp'
-        publishLocation: 'Container'
-
-- stage: DeployDev
-  displayName: 'Deploy to Development'
-  dependsOn: Build
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
-  jobs:
-  - deployment: DeployToDev
-    displayName: 'Deploy to Dev Environment'
-    environment: 'Development'
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - task: DownloadBuildArtifacts@1
-            displayName: 'Download build artifacts'
-            inputs:
-              buildType: 'current'
-              downloadType: 'single'
-              artifactName: 'webapp'
-              downloadPath: '$(System.ArtifactsDirectory)'
-
-          - task: AzureRmWebAppDeployment@4
-            displayName: 'Deploy to Azure App Service'
-            inputs:
-              ConnectionType: 'AzureRM'
-              azureSubscription: 'Dev-Azure-Service-Connection'
-              appType: 'webApp'
-              WebAppName: 'microblog-dev'
-              packageForLinux: '$(System.ArtifactsDirectory)/webapp/*.zip'
-              AppSettings: '-ASPNETCORE_ENVIRONMENT Development -ConnectionStrings__DefaultConnection "$(DevDbConnectionString)"'
-              enableCustomDeployment: true
-              DeploymentType: 'zipDeploy'
-              TakeAppOfflineFlag: true
-
-- stage: DeployProd
-  displayName: 'Deploy to Production'
-  dependsOn: Build
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-  jobs:
-  - deployment: DeployToProd
-    displayName: 'Deploy to Production Environment'
-    environment: 'Production'
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - task: DownloadBuildArtifacts@1
-            displayName: 'Download build artifacts'
-            inputs:
-              buildType: 'current'
-              downloadType: 'single'
-              artifactName: 'webapp'
-              downloadPath: '$(System.ArtifactsDirectory)'
-
-          - task: AzureRmWebAppDeployment@4
-            displayName: 'Deploy to Azure App Service'
-            inputs:
-              ConnectionType: 'AzureRM'
-              azureSubscription: 'Prod-Azure-Service-Connection'
-              appType: 'webApp'
-              WebAppName: 'microblog-prod'
-              packageForLinux: '$(System.ArtifactsDirectory)/webapp/*.zip'
-              AppSettings: '-ASPNETCORE_ENVIRONMENT Production -ConnectionStrings__DefaultConnection "$(ProdDbConnectionString)"'
-              enableCustomDeployment: true
-              DeploymentType: 'zipDeploy'
-              TakeAppOfflineFlag: true
+  - task: PublishCodeCoverageResults@1
+    displayName: 'Publish code coverage report'
+    inputs:
+      codeCoverageTool: 'Cobertura'
+      summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+      reportDirectory: '$(Agent.TempDirectory)/**/TestResults'
+      failIfCoverageEmpty: false
